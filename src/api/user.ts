@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export interface LoginData {
-  email: string
+  username: string
   password: string
 }
 
@@ -15,8 +15,8 @@ export interface UserState {
   avatar?: string
 }
 
-export function login(data: LoginData): Promise<any> {
-  return request.post<LoginRes>('/auth/login', data)
+export function kfLogin(data: LoginData): Promise<any> {
+  return request.post<LoginRes>('/kfapi/user/kfLogin', data)
 }
 
 export function logout() {

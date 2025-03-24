@@ -6,7 +6,7 @@ import {
   getEmailCode,
   getUserInfo,
   resetPassword,
-  login as userLogin,
+  kfLogin as userLogin,
   logout as userLogout,
   register as userRegister,
 } from '@/api/user'

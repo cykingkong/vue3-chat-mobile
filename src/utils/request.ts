@@ -21,7 +21,22 @@ export type RequestError = AxiosError<{
   result?: any
   errorMessage?: string
 }>
-
+function generateUUID() {
+  var d = new Date().getTime();
+  // if (window.performance && typeof window.performance.now === "function") {
+  //   d += performance.now(); //use high-precision timer if available
+  // }
+  let uuid = "xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    let r = (d + Math.random() * 16) % 16 | 0;
+    d = Math.floor(d / 16);
+    return (c == "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+  if (!localStorage.getItem("uuid")) {
+    localStorage.setItem("uuid", uuid);
+  }
+  return uuid;
+}
+generateUUID()
 // 异常拦截处理器
 function errorHandler(error: RequestError): Promise<any> {
   if (error.response) {

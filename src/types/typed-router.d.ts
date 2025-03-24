@@ -19,9 +19,7 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     'home': RouteRecordInfo<'home', '/', Record<never, never>, Record<never, never>>,
-    '//components/banner': RouteRecordInfo<'//components/banner', '/components/banner', Record<never, never>, Record<never, never>>,
-    '//components/grid': RouteRecordInfo<'//components/grid', '/components/grid', Record<never, never>, Record<never, never>>,
-    '//components/scroll-grid': RouteRecordInfo<'//components/scroll-grid', '/components/scroll-grid', Record<never, never>, Record<never, never>>,
+    '//component/message-item': RouteRecordInfo<'//component/message-item', '/component/message-item', Record<never, never>, Record<never, never>>,
     '404': RouteRecordInfo<'404', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
     'charts': RouteRecordInfo<'charts', '/charts', Record<never, never>, Record<never, never>>,
     'contract': RouteRecordInfo<'contract', '/contract', Record<never, never>, Record<never, never>>,

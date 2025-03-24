@@ -23,7 +23,7 @@ return routeArr
 </script>
 
 <template>
-  <van-tabbar v-if="show" v-model="active" placeholder route>
+  <van-tabbar v-if="!show" v-model="active" placeholder route>
     <van-tabbar-item replace :to="item" v-for="(item,e) in tabList" :key="e" >
       {{ t(`layouts.${item.name}`) }}
       <template #icon>

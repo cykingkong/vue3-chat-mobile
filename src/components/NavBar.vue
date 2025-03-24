@@ -20,7 +20,7 @@ const title = computed(() => {
   return route.meta.i18n ? t(route.meta.i18n) : (route.meta.title || '')
 })
 // 若是在tab页 则不显示顶部导航栏
-const show = computed(() => route.name && ['price'].includes(route.name))
+const show = computed(() => route.name && ['price','home'].includes(route.name))
 
 const showLeftArrow = computed(() =>  route.name && routeWhiteList.includes(route.name))
 

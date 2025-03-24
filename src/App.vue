@@ -21,7 +21,7 @@ useHead({
     },
   ],
 })
-
+console.log(isDark.value ,'isDark.value ')
 const keepAliveRouteNames = computed(() => {
   return useRouteCache().routeCaches as string[]
 })
