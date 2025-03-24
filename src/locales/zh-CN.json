@@ -36,9 +36,8 @@
   "layouts": {
     "home": "首页",
     "profile": "我的",
-    "price":"价格",
-    "contract": "合同",
-
+    "price": "价格",
+    "contract": "合同"
   },
   "profile": {
     "login": "登录",
