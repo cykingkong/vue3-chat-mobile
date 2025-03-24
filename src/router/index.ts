@@ -12,7 +12,7 @@ import { isLogin } from '@/utils/auth'
 import setPageTitle from '@/utils/set-page-title'
 
 NProgress.configure({ showSpinner: true, parent: '#app' })
-
+console.log(routes, 'routes')
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_APP_PUBLIC_PATH),
   routes,
@@ -23,7 +23,7 @@ if (import.meta.hot)
   handleHotUpdate(router)
 
 router.beforeEach(async (to: EnhancedRouteLocation) => {
-  NProgress.start()
+  // NProgress.start()
 
   const routeCacheStore = useRouteCacheStore()
   const userStore = useUserStore()
@@ -39,7 +39,7 @@ router.beforeEach(async (to: EnhancedRouteLocation) => {
 })
 
 router.afterEach(() => {
-  NProgress.done()
+  // NProgress.done()
 })
 
 export default router

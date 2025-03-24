@@ -2,15 +2,15 @@ import antfu from '@antfu/eslint-config'
 
 export default antfu(
   {
-    vue: true,
-    typescript: true,
+    vue: false,
+    typescript: false,
 
     // enable UnoCSS support
     // https://unocss.dev/integrations/vscode
-    unocss: true,
+    unocss: false,
 
     formatters: {
-      css: true,
+      css: false,
     },
 
   },
@@ -19,6 +19,8 @@ export default antfu(
       'perfectionist/sort-imports': 'off',
       'perfectionist/sort-exports': 'off',
       'perfectionist/sort-named-exports': 'off',
+      'no-console': 'off',
+      'no-unused-vars': 'off',
     },
   },
   {

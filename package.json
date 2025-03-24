@@ -6,7 +6,7 @@
   "description": "An mobile web apps template based on the Vue 3 ecosystem",
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env MOCK_SERVER_PORT=8086 vite",
+    "dev": " MOCK_SERVER_PORT=8086  vite --open",
     "build": "vue-tsc --noEmit && vite build",
     "build:dev": "vue-tsc --noEmit && vite build --mode=development",
     "preview": "vite preview",
@@ -29,6 +29,7 @@
     "pinia": "^2.3.1",
     "pinia-plugin-persistedstate": "^4.2.0",
     "resize-detector": "^0.3.0",
+    "swiper": "^11.2.5",
     "vant": "^4.9.17",
     "vconsole": "^3.15.1",
     "vue": "^3.5.13",

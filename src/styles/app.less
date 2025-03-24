@@ -25,3 +25,24 @@ html.dark {
   width: 0;
   background: transparent;
 }
+.flex {
+  display: flex;
+}
+.flex-1{
+  flex:1;
+}
+.skeleton-animation {
+  animation: pulseskeleton 1s ease-in infinite;
+}
+       
+@keyframes pulseskeleton {
+  0% {
+   opacity: 0.7;
+   }
+   50% {
+  opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}

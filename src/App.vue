@@ -2,7 +2,7 @@
 import useRouteCache from '@/stores/modules/routeCache'
 
 useHead({
-  title: 'Vue3 Vant Mobile',
+  title: 'nflxcoin',
   meta: [
     {
       name: 'description',
@@ -49,6 +49,9 @@ const mode = computed(() => {
 .app-wrapper {
   width: 100%;
   position: relative;
-  padding: 16px;
+  /* padding: 16px; */
+}
+:root {
+  --van-box-background: #19191D;
 }
 </style>

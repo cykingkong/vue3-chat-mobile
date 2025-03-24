@@ -1,7 +1,10 @@
 {
   "menus": {
     "home": "Home",
+    "Index": "Index",
+    "contract": "contract",
     "profile": "My Center",
+    "price": "Price",
     "darkMode": "🌗 Dark Mode",
     "mockGuide": "💿 Mock Guide",
     "language": "📚 Language",
@@ -33,7 +36,10 @@
   },
   "layouts": {
     "home": "HOME",
-    "profile": "PROFILE"
+    "profile": "PROFILE",
+    "price": "price",
+    "index": "index",
+    "contract": "contract"
   },
   "profile": {
     "login": "Login",
