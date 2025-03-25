@@ -6,6 +6,10 @@ import { useUserStore } from '@/stores'
 import { useRect, useEventListener } from '@vant/use';
 import { chatLog } from '@/api/user';
 import { uploadFile } from '@/api/upload'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+
 const userStore = useUserStore()
 const { t } = useI18n()
 const navbarRef = ref()
@@ -65,7 +69,21 @@ const connectWebSocket = () => {
     const messageData = JSON.parse(messageEvent.data);
     // 收到信息---msgType
     if (messageData.msgType == 'message.kfMsg') {
-      messageList.value.unshift({ type: 'left', content: messageData.data.msg })
+      let msgObj = {
+        msgType:'',
+        msgImgUrl:'',
+      }
+        // 检查 messageData 对象中的 data 属性的 msg 属性是否包含 '<img' 字符串
+        if (messageData.data.msg.indexOf('<img') != -1) {
+            // 如果包含 '<img' 字符串，则执行以下代码块
+            // 取出img标签内的src
+            let src = messageData.data.msg.match(/src="([^"]*)"/)[1];
+            msgObj.msgImgUrl = src;
+            msgObj.msgType = 'image'
+        }else{
+            msgObj.msgType = 'text'
+        }
+      messageList.value.unshift({ type: 'left', content: messageData.data.msg,msgType:msgObj.msgType,msgImgUrl:msgObj.msgImgUrl })
     }
     if (messageData.action == 'UserLogin') {
       console.log('登录成功')
@@ -259,6 +277,8 @@ const onOversize = (file) => {
 }
 const handleAfterRead = async (file: any) => {
   console.log(file, 'flie')
+    NProgress.start()
+
   queryUploadFile(file);
 }
 const queryUploadFile = async (file: any) => {
@@ -269,8 +289,12 @@ const queryUploadFile = async (file: any) => {
   // 发起上传请求
   try {
     const { data } = await uploadFile(formData);
-    uploadImageUrl.value = data.url
+    uploadImageUrl.value = data.url ||''
+    NProgress.done()
+
+
     showToast('文件上传成功');
+
     sendMessage('image')
 
   } catch (error) {
