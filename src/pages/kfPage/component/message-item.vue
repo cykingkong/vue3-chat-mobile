@@ -3,28 +3,27 @@
         
         <div class="Message-main">
             <!-- 头像 -->
-            <div class="avatar">
-                <van-icon name="service" v-if="message.type == 'left'"/>
-                <van-icon name="manager" v-else/>
-            </div>
+            <img  class="avatar"  src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
             <!-- Message-inner -->
             <div class="Message-inner">
                 <div class="Message-content">
-                    <div class="Bubble">
-                        <p   v-if="message.msgType == 'text'">{{ message.content }}</p>
-                        <div v-else>
-                            <van-image fit="cover"  :key="msgKey"  :src="message.msgImgUrl" alt=""/>
-                        </div>
-
-                    </div>
+                    <div class="Bubble">{{ message.content }}</div>
                 </div>
             </div>
         </div>
-
+        
     </div>
 </template>
 <script setup lang="ts">
 import { Lazyload } from 'vant';
+const dark = ref<boolean>(isDark.value)
+
+watch(
+  () => isDark.value,
+  (newMode) => {
+    dark.value = newMode
+  },
+)
 const props = defineProps({
     message: {
         type: Object,
@@ -36,9 +35,6 @@ const props = defineProps({
     hasKf:{
         type: Boolean,
         default: false
-    },
-    msgKey:{
-        type:Number,
     }
 })
 </script>
@@ -62,11 +58,7 @@ const props = defineProps({
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background: var(--van-gray-4);
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .Message-inner {
@@ -94,9 +86,6 @@ const props = defineProps({
     -webkit-user-select: text;
     user-select: text;
     white-space: pre-wrap;
-    p{
-        margin:0;
-    }
 }
 
 .Message.right .Message-main {
@@ -107,7 +96,7 @@ const props = defineProps({
 }
 .Message.right .Bubble {
     margin-left: 3rem;
-    background:var(--van-orange);
+    background:var(--van-orange)
 }
 
 .Message.left .Bubble {

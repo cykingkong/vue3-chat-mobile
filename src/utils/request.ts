@@ -14,6 +14,7 @@ const request = axios.create({
   // API 请求的默认前缀
   baseURL: import.meta.env.VITE_APP_API_BASE_URL,
   timeout: 6000, // 请求超时时间
+  withCredentials: true, // 允许跨域请求
 })
 
 export type RequestError = AxiosError<{
@@ -64,11 +65,15 @@ function errorHandler(error: RequestError): Promise<any> {
 // 请求拦截器
 function requestHandler(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig> {
   const savedToken = localStorage.getItem(STORAGE_TOKEN_KEY)
+  const token = localStorage.getItem('token')
   // 如果 token 存在
   // 让每个请求携带自定义 token, 请根据实际情况修改
-  if (savedToken)
-    config.headers[REQUEST_TOKEN_KEY] = savedToken
+  if (savedToken){
 
+    config.headers.Authorization = `Bearer ${savedToken}`;
+    }
+    config.headers['uuid'] = localStorage.getItem("uuid");
+    config.headers['Access-Control-Allow-Origin']= '*';
   return config
 }
 

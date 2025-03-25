@@ -9,7 +9,8 @@ const tabIconEnum = {
   profile: 'i-carbon:user',
   price :''
 }
-const show = computed(() => route.name && routeWhiteList.includes(route.name))
+// const show = computed(() => route.name && routeWhiteList.includes(route.name))
+const show = computed(() => false)
 const tabList = computed(() => {
   const routeArr = routeWhiteList.map((item) => {
   return {
@@ -23,7 +24,7 @@ return routeArr
 </script>
 
 <template>
-  <van-tabbar v-if="!show" v-model="active" placeholder route>
+  <van-tabbar v-if="show" v-model="active" placeholder route>
     <van-tabbar-item replace :to="item" v-for="(item,e) in tabList" :key="e" >
       {{ t(`layouts.${item.name}`) }}
       <template #icon>

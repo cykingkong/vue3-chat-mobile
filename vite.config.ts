@@ -22,7 +22,7 @@ export default ({ mode }: ConfigEnv): UserConfig => {
         '/api': {
           target: '',
           ws: false,
-          changeOrigin: true,
+          changeOrigin: true,  // 是否修改请求头中的Origin
         },
       },
     },

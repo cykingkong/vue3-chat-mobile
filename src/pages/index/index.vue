@@ -4,16 +4,26 @@ import MessageItem from './component/message-item.vue'
 import { languageColumns, locale } from '@/utils/i18n'
 import { useUserStore } from '@/stores'
 import { useRect, useEventListener } from '@vant/use';
+import { chatLog } from '@/api/user';
+import { uploadFile } from '@/api/upload'
 const userStore = useUserStore()
 const { t } = useI18n()
 const navbarRef = ref()
 const messageListRef = ref()
+const historyMessageListRef = ref()
 const messageContainerRef = ref()
 const sendBtnShow = ref(false)
 const message = ref('')
+const tipsText = ref('')
+const hasKf = ref(true)
+const page = ref(1)
 const chatHeight = ref(0)
+const chatContainerHeight = ref(0)
 const messageList = ref([])
-
+const loading = ref(false)
+const historyMessageList = ref([])
+const historyMessageListStatus = ref('loading')
+const uploadImageUrl = ref('')
 // socket部分
 const isWebSocketConnected = ref(false)
 const userLoginInfo = ref({})
@@ -21,57 +31,66 @@ const socketFormInline = ref(
   {
     "action": "UserLogin",
     "params": {
-        "uuId": "test",
-        "nickname": "",
-        "avatar": "",
-        "channel": ""
-    } 
+      "uuId": "test",
+      "nickname": "testNickName",
+      "avatar": "",
+      "channel": "app_cy" // 项目名称
+    }
   }
 );
 const webSocket = ref()
 const connectWebSocket = () => {
-  socketFormInline.value.params.uuId = localStorage.getItem('uuid') 
-  const urlWithParams = import.meta.env.VITE_APP_API_BASE_URL_SOCKET +'?'+ JSON.stringify(socketFormInline.value);
+  socketFormInline.value.params.uuId = localStorage.getItem('uuid')
+  const urlWithParams = import.meta.env.VITE_APP_API_BASE_URL_SOCKET + '?' + JSON.stringify(socketFormInline.value);
   webSocket.value = new WebSocket(urlWithParams);
   webSocket.value.onopen = () => {
     console.log("socket 连接成功", webSocket.value);
-
+    tipsText.value = `${t('chat.linkKfSuccess')}`
     isWebSocketConnected.value = true;
-    // Start the heartbeat
-    setTimeout(() => {
-    startHeartbeat();
-      
-    }, 500);
-    if(webSocket.value){
+    if (webSocket.value) {
       webSocket.value.send(JSON.stringify(socketFormInline.value))
     }
+    setTimeout(() => {
+      tipsText.value = ``
+    }, 1000);
+    // Start the heartbeat
+    setTimeout(() => {
+      startHeartbeat();
+    }, 5000);
+
+
   };
 
   webSocket.value.onmessage = (messageEvent: any) => {
-    console.log("收到消息: ", messageEvent.data);
     const messageData = JSON.parse(messageEvent.data);
-    if(messageData.action == 'UserLogin'){
+    // 收到信息---msgType
+    if (messageData.msgType == 'message.kfMsg') {
+      messageList.value.unshift({ type: 'left', content: messageData.data.msg })
+    }
+    if (messageData.action == 'UserLogin') {
       console.log('登录成功')
       userLoginInfo.value = messageData.data
-
-      if(!messageData.data.sessionId){
-        hasKf.value = false
+      // 如果没有sessionId,则是没有客服，需要重新请求
+      if (!messageData.data.sessionId) {
+        // 提示正在寻找客服
+        tipsText.value = `${t('chat.findingKf')}`
         let linkKfParams = {
           "action": "UserLinkKf",
           "params": {
             "uuId": localStorage.getItem('uuid') || '',
           }
         }
-      webSocket.value.send(JSON.stringify(linkKfParams));
-      }else{
+        webSocket.value.send(JSON.stringify(linkKfParams));
+      } else {
+        fetchChatLog(messageData.data.sessionId)
         hasKf.value = true
       }
     }
-     if(messageData.action == 'UserLinkKf'){
+    if (messageData.action == 'UserLinkKf') {
       console.log('收到消息')
       setTimeout(() => {
         if (!messageData.data.sessionId) {
-          hasKf.value = false
+          tipsText.value = `${t('chat.findingKf')}`
           let linkKfParams = {
             "action": "UserLinkKf",
             "params": {
@@ -83,7 +102,7 @@ const connectWebSocket = () => {
           hasKf.value = true
         }
       }, 10000);
-    
+
     }
 
   };
@@ -94,14 +113,17 @@ const connectWebSocket = () => {
     webSocket.value = null;
     isWebSocketConnected.value = false;
     console.log("结束监听");
-    stopHeartbeat(); 
-       // Attempt to reconnect
-    reconnectWebSocket();
+    stopHeartbeat();
+    // Attempt to reconnect
+    reconnectTimer = setTimeout(() => {
+      reconnectWebSocket();
+
+    }, 5000);
   };
 };
+const i = ref(0)
 let heartbeatTimer = null;
 let reconnectTimer = null;
-const hasKf =  ref(true)
 
 let pingParams = ref({
   action: "Ping",
@@ -114,7 +136,7 @@ const startHeartbeat = () => {
   // Send a heartbeat every 30 seconds
   heartbeatTimer = setInterval(() => {
     if (webSocket.value && webSocket.value.readyState === WebSocket.OPEN) {
-      pingParams.value.params.uuId  = localStorage.getItem('uuid') ||''
+      pingParams.value.params.uuId = localStorage.getItem('uuid') || ''
       webSocket.value.send(JSON.stringify(pingParams.value));
     }
   }, 5000);
@@ -133,88 +155,179 @@ const stopHeartbeat = () => {
 
 const reconnectWebSocket = () => {
   // Attempt to reconnect every 5 seconds
-  reconnectTimer = setInterval(() => {
-    if (!isWebSocketConnected.value) {
-      console.log("Attempting to reconnect...");
-      connectWebSocket();
-    } else {
-      clearInterval(reconnectTimer);
-    }
-  }, 5000);
+  // reconnectTimer = setInterval(() => {
+  if (!isWebSocketConnected.value) {
+    console.log("Attempting to reconnect...");
+    connectWebSocket();
+  } else {
+    clearInterval(reconnectTimer);
+  }
+  // }, 5000);
 }
 // socket部分结束
+// 下拉刷新历史记录
+const onRefresh = async () => {
+  if (historyMessageListStatus.value == 'nomore') {
+    showToast(`${t('chat.noMore')}`)
+    loading.value = false;
 
-async function login(values: any) {
-  try {
-    await userStore.login({ username: 'admin', password: '123456' })
+    return
   }
-  finally {
+  loading.value = true;
+  try {
+    page.value++
+    await fetchChatLog()
+    loading.value = false
+
+  } catch (e) {
+    console.log(e)
+  } finally {
   }
 }
-// login()
-const sendMessage = ()=>{
-//  if(!userLoginInfo.value.sessionId){
-//   return
-//  }
+const sendMessage = (type: string = 'text') => {
+  if (!userLoginInfo.value.sessionId) {
+    return
+  }
+  if (!message.value && type == 'text') {
+    showToast(t('chat.inputMsg'));
+    return
+  }
   let params = {
     "action": "UserSendMsg",
     "params": {
-      "uuId": localStorage.getItem('uuid') ,
-      "msg": message.value
+      "uuId": localStorage.getItem('uuid'),
+      "msg": type == 'text' ? message.value : `<img src=${uploadImageUrl.value}/>`
     }
   }
-  messageList.value.unshift({type:'right',content:`${messageList.value.length}----消息${message.value}`})
-  // webSocket.value.send(JSON.stringify(params));
-//   const messageListRefHeight = useRect(messageListRef).height;
-// messageContainerRef.value.scrollTop = messageListRefHeight;
-    setTimeout(() => {
-    message.value = ''
-    sendBtnShow.value=false
-    }, 190);
+  if (type == 'text') {
+    messageList.value.unshift({ type: 'right', content: `${message.value}`, msgType: 'text' })
+  } else {
+    messageList.value.unshift({ type: 'right', content: `<img src=${uploadImageUrl.value}/>`, msgType: 'image', msgImgUrl: uploadImageUrl.value })
+  }
+
+  // ws发送消息
+  webSocket.value.send(JSON.stringify(params));
+  setTimeout(() => {
+    message.value = '';
+    uploadImageUrl.value = '';
+    const historyMessageListRefHeight = useRect(historyMessageListRef).height || 0;
+    const messageListRefHeight = useRect(messageListRef).height || 0;
+    messageContainerRef.value.scrollTop = historyMessageListRefHeight + messageListRefHeight
+    sendBtnShow.value = false
+  }, 190);
+}
+// 获取用户聊天记录
+const fetchChatLog = async (channel: any) => {
+  let params = {
+    'user-uuid': localStorage.getItem('uuid'),
+    channel: 'app_cy',
+    page: page.value,
+    page_size: 5
+  }
+  const { data, code } = await chatLog(params)
+  console.log(data, 'data')
+  if (code == 200) {
+    if (data && !data.rows) {
+      historyMessageListStatus.value = 'nomore'
+      return
+    }
+
+    let chatLogList = data.rows?.map((item: any) => {
+
+      let obj = {
+        type: item.chatType == 1 ? 'left' : "right",
+        content: item.msg,
+        msgType: '',
+        msgImgUrl: ''
+      }
+      // 判断item.msg是否为图片img标签
+      if (item.msg.indexOf('<img') != -1) {
+        obj.msgType = 'image'
+        obj.msgImgUrl = item.msg.match(/src="([^"]*)"/)[1]
+      } else {
+        obj.msgType = 'text'
+      }
+      return obj
+    })
+    historyMessageList.value = [...historyMessageList.value, ...chatLogList]
+  }
 
 }
-const i = ref(1)
+const onOversize = (file) => {
+  console.log(file)
+  showToast('文件大小不能超过 5Mb');
+}
+const handleAfterRead = async (file: any) => {
+  console.log(file, 'flie')
+  queryUploadFile(file);
+}
+const queryUploadFile = async (file: any) => {
+  file.status = 'uploading'; // 显示上传状态
+  // 创建 FormData 对象
+  const formData = new FormData();
+  formData.append('file', file.file);
+  // 发起上传请求
+  try {
+    const { data } = await uploadFile(formData);
+    uploadImageUrl.value = data.url
+    showToast('文件上传成功');
+    sendMessage('image')
 
+  } catch (error) {
+    showToast('文件上传失败');
+  }
+
+}
 onMounted(async () => {
+  tipsText.value = `${t('chat.linkingKf')}`
   setTimeout(() => {
     if (navbarRef.value) {
       const navbarHeight = navbarRef.value.$el.offsetHeight
       chatHeight.value = window.innerHeight - navbarHeight
     }
-    console.log(localStorage.getItem('uuid'),'sadawdawawe')
-connectWebSocket() 
+
+    connectWebSocket()
 
   }, 20)
 
 
 
 })
+
 // Onload
 </script>
 <template>
   <div class="index-content">
-    <VanNavBar :title="t('menus.home') " :fixed="true"  :left-arrow="false" 
-      ref="navbarRef" />
-    <div class="chat-content" :style="{ height: chatHeight + 'px' }">
+    <VanNavBar :title="t('menus.home')" :fixed="true" :left-arrow="false" ref="navbarRef" />
+    <van-pull-refresh :disabled="true" v-model="loading" @refresh="onRefresh"
+      class="chat-content" :style="{ height: chatHeight + 'px' }">
       <div class="MessageContainer" ref="messageContainerRef">
+        <!-- 暂时关闭历史记录 开放了的话:disabled要改为拿historyMessageListStatus判断 -->
+        <!-- <div class="historyMessageList" ref="historyMessageListRef">
+          <div class="divider" v-if="historyMessageList && historyMessageList.length">历史记录</div>
+          <MessageItem :hasKf="hasKf" :message="item" :index="index" v-for="(item, index) in historyMessageList"
+            :key="i"></MessageItem>
+        </div> -->
         <div class="MessageList" ref="messageListRef">
-          <MessageItem :hasKf="hasKf" :message="item" :index="index" v-for="(item, index) in messageList" :key="i"></MessageItem>
-          <div class="linking-kf" v-if="!hasKf">客服繁忙 正在排队中...</div>
-
+          <MessageItem :hasKf="hasKf" :message="item" :index="index" :msgKey="i" v-for="(item, index) in messageList"
+            :key="i">
+          </MessageItem>
+          <div class="linking-kf" v-if="hasKf">{{ tipsText }}</div>
         </div>
       </div>
       <div class="chat-footer">
         <div class="input-box">
-          <van-field v-model="message"  @focus="sendBtnShow=true" autosize rows="1" type="textarea" placeholder="请输入消息" />
+          <van-field v-model="message" @focus="sendBtnShow = true" autosize rows="1" type="textarea"
+            placeholder="请输入消息" />
         </div>
-        <div class="send-btn" :class="{'send-btn-show':sendBtnShow}">
-          <van-button type="primary" class="sendBtn"  v-if="sendBtnShow" @click="sendMessage">发送</van-button>
-          <van-uploader>
-            <van-button icon="photo-o" type="primary" :max-size="5 * 1024" :max-count="1"  class="sendBtn" v-if="sendBtnShow"></van-button>
+        <div class="send-btn" :class="{ 'send-btn-show': sendBtnShow }">
+          <van-button type="primary" class="sendBtn" v-if="sendBtnShow" @click="sendMessage('text')">发送</van-button>
+          <van-uploader @oversize="onOversize" :after-read="handleAfterRead" :max-size="5 * 1024 * 1024">
+            <van-button icon="photo-o" type="primary" :max-count="1" class="sendBtn" v-if="sendBtnShow"></van-button>
           </van-uploader>
         </div>
       </div>
-    </div>
+    </van-pull-refresh>
   </div>
 </template>
 
@@ -228,17 +341,49 @@ connectWebSocket()
   }
   </route>
 <style lang="less" scoped>
+.divider {
+  width: 100%;
+  // height: 1px;
+  position: relative;
+  text-align: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate(0%, -50%);
+    width: 140px;
+    height: 1px;
+    background: var(--van-gray-4);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0%;
+    top: 50%;
+    transform: translate(0%, -50%);
+    width: 140px;
+    height: 1px;
+    background: var(--van-gray-4);
+
+
+  }
+}
+
 .index-content {
   width: 100%;
   min-height: 100vh;
   max-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  // align-items: center;
+  // justify-content: center;
   gap: 12px;
   // 底部安全距离
   padding-bottom: env(safe-area-inset-bottom);
+  padding-top: var(--van-nav-bar-height);
 
   .chat-content {
     width: 100%;
@@ -250,22 +395,33 @@ connectWebSocket()
 
     .MessageContainer {
       width: 100%;
-      height: calc(100%  - 60px);
-      background-color: var(--van-gray-1);
+      height: 100%;
+      flex: 1;
+      background-color: var(--van-background-1);
       overflow-x: auto;
-      .MessageList {
-        overflow-y: auto;
-        padding: var(--van-padding-sm);
-        margin-top: 12px;
+      padding: var(--van-padding-sm);
+
+      .historyMessageList {
         display: flex;
         flex-direction: column-reverse;
         gap: 12px;
-        .linking-kf{
+      }
+
+      .MessageList {
+        overflow-y: auto;
+        // padding: var(--van-padding-sm);
+        // margin-top: 12px;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 12px;
+
+        .linking-kf {
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
         }
+
         .Message {
           position: relative;
 
@@ -298,41 +454,57 @@ connectWebSocket()
             }
           }
         }
-        
+
       }
     }
-    .chat-footer{
-      width: 100%;
-      padding:12px;
-      background: var(--van-gray-3);
+
+    .footer-image-box {
+      background: var(--van-background-3);
+      flex-shrink: 0;
+      padding: 12px 12px 0;
       display: flex;
       align-items: center;
-      .input-box{
-        flex:1;
 
-        :deep(.van-cell){
+    }
+
+    .chat-footer {
+      width: 100%;
+      padding: 12px;
+      background: var(--van-background-3);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+
+      .input-box {
+        flex: 1;
+
+        :deep(.van-cell) {
           height: 100%;
         }
       }
-      .send-btn{
-        width: 0;  display: flex;
+
+      .send-btn {
+        width: 0;
+        display: flex;
         justify-content: center;
         transition: all 0.3s;
-        gap:8px;
-        .sendBtn{
+        gap: 8px;
+
+        .sendBtn {
           width: 60px;
           height: 40px;
           border-radius: 40px;
           white-space: nowrap;
         }
       }
-      .send-btn-show{
+
+      .send-btn-show {
         width: 140px;
       }
     }
   }
 
- 
+
 
 
 }
@@ -350,13 +522,20 @@ connectWebSocket()
   user-select: text;
   white-space: pre-wrap;
 }
+
 .Message.right .Bubble {
-    background: var(--van-orange);
-    border-radius: 12px;
-    margin-left: 2.5rem;
-}
-.Message.left .Bubble {
-    margin-right: 3rem;
+  background: var(--van-orange);
+  border-radius: 12px;
+  margin-left: 2.5rem;
 }
 
+.Message.left .Bubble {
+  margin-right: 3rem;
+}
+
+:deep(.van-pull-refresh__track) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
 </style>

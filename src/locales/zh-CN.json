@@ -1,6 +1,6 @@
 {
   "menus": {
-    "home": "主页",
+    "home": "客服",
     "profile": "个人中心",
     "price": "价格",
     "contract": "合同",
@@ -97,5 +97,14 @@
     "logout": "退出登录",
     "currentVersion": "当前版本",
     "comfirmTitle": "确认退出？"
+  },
+  "chat":{
+    "linkingKf":"正在连接客服系统...",
+    "linkKfSuccess":"成功连接客服系统",
+    "findingKf":"客服繁忙 正在排队中...",
+    "inputMsg":"请输入内容",
+    "noMore":"已无更多"
+
+
   }
 }

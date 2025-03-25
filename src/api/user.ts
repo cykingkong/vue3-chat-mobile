@@ -3,6 +3,7 @@ import request from '@/utils/request'
 export interface LoginData {
   username: string
   password: string
+
 }
 
 export interface LoginRes {
@@ -24,7 +25,7 @@ export function logout() {
 }
 
 export function getUserInfo() {
-  return request<UserState>('/user/me')
+  return request<UserState>('/kfapi/user/info')
 }
 
 export function getEmailCode(): Promise<any> {
@@ -35,6 +36,10 @@ export function resetPassword(): Promise<any> {
   return request.post('/user/reset-password')
 }
 
+export function chatLog(params:any): Promise<any> {
+  // 该请求用于获取用户聊天日志
+  return request.get('/kfapi/chat/chatLog',{params})
+}
 export function register(): Promise<any> {
   return request.post('/user/register')
 }

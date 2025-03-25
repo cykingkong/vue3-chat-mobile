@@ -31,7 +31,7 @@ const showLeftArrow = computed(() =>  route.name && routeWhiteList.includes(rout
     :title="title"
     :fixed="true"
     clickable placeholder
-    :left-arrow="!showLeftArrow"
+    :left-arrow="false"
     @click-left="onBack"
     v-show="!show"
   />

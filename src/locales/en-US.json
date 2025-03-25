@@ -1,6 +1,6 @@
 {
   "menus": {
-    "home": "Home",
+    "home": "Customer service",
     "Index": "Index",
     "contract": "contract",
     "profile": "My Center",
@@ -99,5 +99,13 @@
     "logout": "Sign Out",
     "currentVersion": "Current Version",
     "comfirmTitle": "Confirm Exit?"
+  },
+  "chat":{
+    "linkingKf":"Linking customer service ...",
+    "linkKfSuccess":"Link customer service Success...",
+    "findingKf":"Customer service is busy. You are now in the queue...",
+    "inputMsg":"",
+    "noMore":"No more messages"
+
   }
 }
