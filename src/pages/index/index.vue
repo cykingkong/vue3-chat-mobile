@@ -9,7 +9,7 @@ import { uploadFile } from '@/api/upload'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
-
+const urlParams = ref()
 const userStore = useUserStore()
 const { t } = useI18n()
 const navbarRef = ref()
@@ -35,16 +35,21 @@ const socketFormInline = ref(
   {
     "action": "UserLogin",
     "params": {
-      "uuId": "test",
-      "nickname": "testNickName",
+      "uuId": "",
+      "nickname": "",
       "avatar": "",
-      "channel": "app_cy" // 项目名称
+      "channel": "" // 项目名称
     }
   }
 );
 const webSocket = ref()
 const connectWebSocket = () => {
   socketFormInline.value.params.uuId = localStorage.getItem('uuid')
+  console.log(urlParams.value,urlParams.value.get('nickname'))
+  socketFormInline.value.params.nickname = urlParams.value.get('nickname') || 'testnickName';
+  socketFormInline.value.params.avatar = urlParams.value.get('avatar') || '';
+  socketFormInline.value.params.channel = urlParams.value.get('channel') || 'app_cy';
+
   const urlWithParams = import.meta.env.VITE_APP_API_BASE_URL_SOCKET + '?' + JSON.stringify(socketFormInline.value);
   webSocket.value = new WebSocket(urlWithParams);
   webSocket.value.onopen = () => {
@@ -122,6 +127,11 @@ const connectWebSocket = () => {
       }, 10000);
 
     }
+    if(messageData.action == 'UserSendMsg' && messageData.code !== 200){
+      
+        showToast(messageData.message)
+        delMessage()
+    }
 
   };
   webSocket.value.onerror = (error: any) => {
@@ -135,7 +145,6 @@ const connectWebSocket = () => {
     // Attempt to reconnect
     reconnectTimer = setTimeout(() => {
       reconnectWebSocket();
-
     }, 5000);
   };
 };
@@ -202,6 +211,10 @@ const onRefresh = async () => {
   } finally {
   }
 }
+const delMessage =()=>{
+  // 删除最近发送的一条信息
+  messageList.value.shift()
+}
 const sendMessage = (type: string = 'text') => {
   if (!userLoginInfo.value.sessionId) {
     return
@@ -235,10 +248,10 @@ const sendMessage = (type: string = 'text') => {
   }, 190);
 }
 // 获取用户聊天记录
-const fetchChatLog = async (channel: any) => {
+const fetchChatLog = async () => {
   let params = {
     'user-uuid': localStorage.getItem('uuid'),
-    channel: 'app_cy',
+    channel: urlParams.value.get('channel')||'app_cy',
     page: page.value,
     page_size: 5
   }
@@ -304,11 +317,19 @@ const queryUploadFile = async (file: any) => {
 }
 onMounted(async () => {
   tipsText.value = `${t('chat.linkingKf')}`
+      // 获取浏览器地址上的参数
+      const {search} = window.location
+    urlParams.value = new URLSearchParams(search)
+    console.log(window.location, urlParams.value)
   setTimeout(() => {
     if (navbarRef.value) {
       const navbarHeight = navbarRef.value.$el.offsetHeight
       chatHeight.value = window.innerHeight - navbarHeight
     }
+
+
+
+
 
     connectWebSocket()
 
@@ -333,7 +354,7 @@ onMounted(async () => {
             :key="i"></MessageItem>
         </div> -->
         <div class="MessageList" ref="messageListRef">
-          <MessageItem :hasKf="hasKf" :message="item" :index="index" :msgKey="i" v-for="(item, index) in messageList"
+          <MessageItem :hasKf="hasKf" :avatar="urlParams.value?.get('avatar')||''" :message="item" :index="index" :msgKey="i" v-for="(item, index) in messageList"
             :key="i">
           </MessageItem>
           <div class="linking-kf" v-if="hasKf">{{ tipsText }}</div>

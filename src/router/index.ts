@@ -34,8 +34,17 @@ router.beforeEach(async (to: EnhancedRouteLocation) => {
   // Set page title
   setPageTitle(to.meta.title)
 
-  if (isLogin() && !userStore.userInfo?.uid)
-    await userStore.info()
+  if (!isLogin()) {
+    // If token does not exist, redirect to login page
+    // if (to.path !== '/login') {
+    //   return { path: '/login' }
+    // }
+  } else {
+    // If token exists, check if user info exists
+    if (isLogin() && !userStore.userInfo?.uid) {
+      await userStore.info()
+    }
+  }
 })
 
 router.afterEach(() => {

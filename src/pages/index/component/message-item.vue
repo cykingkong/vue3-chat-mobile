@@ -4,8 +4,14 @@
         <div class="Message-main">
             <!-- 头像 -->
             <div class="avatar">
-                <van-icon name="service" v-if="message.type == 'left'"/>
+<div class="avatar-icon" v-if="avatar">
+    <van-icon name="service" v-if="message.type == 'left'"/>
                 <van-icon name="manager" v-else/>
+</div>
+<div class="avatar-icon" v-else>
+<img :src="avatar" alt="" v-if="message.type == 'left'"/>
+    <van-icon name="manager" v-else/>
+</div>          
             </div>
             <!-- Message-inner -->
             <div class="Message-inner">
@@ -39,6 +45,9 @@ const props = defineProps({
     },
     msgKey:{
         type:Number,
+    },
+    avatar:{
+        type:String,
     }
 })
 </script>

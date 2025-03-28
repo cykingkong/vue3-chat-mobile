@@ -23,5 +23,6 @@ declare module 'vue-router/auto-routes' {
     '404': RouteRecordInfo<'404', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
     'kfPage': RouteRecordInfo<'kfPage', '/kfPage', Record<never, never>, Record<never, never>>,
     '/kfPage/component/message-item': RouteRecordInfo<'/kfPage/component/message-item', '/kfPage/component/message-item', Record<never, never>, Record<never, never>>,
+    'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
   }
 }
