@@ -4,20 +4,20 @@
         <div class="Message-main">
             <!-- 头像 -->
             <div class="avatar">
-<div class="avatar-icon" v-if="avatar">
+<div class="avatar-icon" >
     <van-icon name="service" v-if="message.type == 'left'"/>
                 <van-icon name="manager" v-else/>
 </div>
-<div class="avatar-icon" v-else>
+<!-- <div class="avatar-icon" v-else>
 <img :src="avatar" alt="" v-if="message.type == 'left'"/>
     <van-icon name="manager" v-else/>
-</div>          
+</div>           -->
             </div>
             <!-- Message-inner -->
             <div class="Message-inner">
                 <div class="Message-content">
                     <div class="Bubble">
-                        <p   v-if="message.msgType == 'text'">{{ message.content }}</p>
+                        <p   v-if="message.msgType == 'text'">{{ message.content }}{{ avatar }}</p>
                         <div v-else>
                             <van-image fit="cover"  :key="msgKey"  :src="message.msgImgUrl" alt=""/>
                         </div>

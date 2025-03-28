@@ -354,7 +354,7 @@ onMounted(async () => {
             :key="i"></MessageItem>
         </div> -->
         <div class="MessageList" ref="messageListRef">
-          <MessageItem :hasKf="hasKf" :avatar="urlParams.value?.get('avatar')||''" :message="item" :index="index" :msgKey="i" v-for="(item, index) in messageList"
+          <MessageItem :hasKf="hasKf"  :message="item" :index="index" :msgKey="i" v-for="(item, index) in messageList"
             :key="i">
           </MessageItem>
           <div class="linking-kf" v-if="hasKf">{{ tipsText }}</div>
